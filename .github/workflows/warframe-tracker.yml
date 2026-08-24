@@ -3,7 +3,7 @@ name: Warframe Rotation Tracker
 on:
   schedule:
     # Check 5 minutes after every hour. GitHub Actions schedules use UTC.
-    - cron: "5 * * * *"
+   - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
     inputs:
       only:
