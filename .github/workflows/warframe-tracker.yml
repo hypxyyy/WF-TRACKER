@@ -39,12 +39,12 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-name: Run tracker
-env:
+- name: Run tracker
+  env:
     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
     INPUT_ONLY: ${{ inputs.only }}
-shell: bash
- run: |
+  shell: bash
+  run: |
     ONLY="${INPUT_ONLY:-all}"
     python tracker.py --only "$ONLY"
 
