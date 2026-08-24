@@ -4,23 +4,19 @@ on:
   schedule:
     # Check 5 minutes after every hour. GitHub Actions schedules use UTC.
    - cron: "7,22,37,52 * * * *"
-  workflow_dispatch:
-    inputs:
-      only:
-        description: "Which tracker should run?"
-        required: true
-        default: "all"
-        type: choice
-        options:
-          - all
-          - coda
-          - bird3
-          - archon
-      force:
-        description: "Force a Discord post even if this rotation was already posted?"
-        required: true
-        default: false
-        type: boolean
+   
+workflow_dispatch:
+  inputs:
+    only:
+      description: "Which tracker should run?"
+      required: true
+      default: "all"
+      type: choice
+      options:
+        - all
+        - coda
+        - bird3
+        - archon
 
 permissions:
   contents: write
@@ -43,20 +39,14 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-
-      - name: Run tracker
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          INPUT_ONLY: ${{ inputs.only }}
-          INPUT_FORCE: ${{ inputs.force }}
-        shell: bash
-        run: |
-          ONLY="${INPUT_ONLY:-all}"
-          EXTRA=""
-          if [[ "${INPUT_FORCE:-false}" == "true" ]]; then
-            EXTRA="--force"
-          fi
-          python tracker.py --only "$ONLY" $EXTRA
+name: Run tracker
+env:
+    DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+    INPUT_ONLY: ${{ inputs.only }}
+shell: bash
+ run: |
+    ONLY="${INPUT_ONLY:-all}"
+    python tracker.py --only "$ONLY"
 
       - name: Save tracker state
         if: always()
