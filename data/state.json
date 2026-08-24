@@ -1,6 +1,8 @@
 {
   "archon": "archon:6a8b85fe39458d5b31f05161",
+  "baro": "baro:5d1e07a0a38e4a4fdd7cefca:inactive:4f53cda18c2baa0c",
   "bird3": "bird3:2026-08-24T00:00:00+00:00",
   "coda": "coda:2026-08-24T00:00:00+00:00",
-  "updated_at": "2026-08-24T04:32:00.179298Z"
+  "teshin": "teshin:2026-08-24T00:00:00+00:00:30,000 Endo:150",
+  "updated_at": "2026-08-24T22:42:13.996162Z"
 }
