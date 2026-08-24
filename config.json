@@ -5,7 +5,10 @@
     "all": "",
     "coda": "",
     "bird3": "",
-    "archon": ""
+    "archon": "",
+    "baro": "",
+    "darvo": "",
+    "teshin": ""
   },
   "coda": {
     "enabled": true,
@@ -47,5 +50,15 @@
   },
   "archon_hunt": {
     "enabled": true
+  },
+  "baro": {
+    "enabled": true
+  },
+  "darvo": {
+    "enabled": true
+  },
+  "teshin": {
+    "enabled": true,
+    "show_evergreens": true
   }
 }
