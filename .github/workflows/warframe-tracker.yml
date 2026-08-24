@@ -2,7 +2,7 @@ name: Warframe Rotation Tracker
 
 on:
   schedule:
-    # Check every 15 minutes. GitHub Actions schedules use UTC.
+    # Automatic check every 15 minutes
     - cron: "7,22,37,52 * * * *"
 
   workflow_dispatch:
@@ -17,6 +17,12 @@ on:
           - coda
           - bird3
           - archon
+
+      force:
+        description: "Post it even if it has already been posted?"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -44,10 +50,18 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           INPUT_ONLY: ${{ inputs.only }}
+          INPUT_FORCE: ${{ inputs.force }}
+          EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
           ONLY="${INPUT_ONLY:-all}"
-          python tracker.py --only "$ONLY"
+
+          # Scheduled runs should NEVER force-post.
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$INPUT_FORCE" == "true" ]]; then
+            python tracker.py --only "$ONLY" --force
+          else
+            python tracker.py --only "$ONLY"
+          fi
 
       - name: Save tracker state
         if: always()
