@@ -46,7 +46,7 @@ jobs:
 
       - name: Run tracker
         env:
-          DISCORD_WEBHOOK: ${{ secrets.WIERDO_OF_INTERNET }}
+          DISCORD_WEBHOOK: ${{ DISCORD_WEBHOOK }}
           INPUT_ONLY: ${{ inputs.only }}
           INPUT_FORCE: ${{ inputs.force }}
         shell: bash
