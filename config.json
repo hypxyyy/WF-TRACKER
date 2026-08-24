@@ -1,14 +1,17 @@
 {
   "platform": "pc",
   "discord_username": "Pazuul",
-  "mentions": "<@&1541574401969885224>",
-    "all": "",
+
+  "mentions": {
+    "all": "<@&1541574401969885224>",
     "coda": "",
     "bird3": "",
     "archon": "",
     "baro": "",
     "darvo": "",
     "teshin": ""
+  }
+}
   },
   "coda": {
     "enabled": true,
