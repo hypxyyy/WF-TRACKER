@@ -1,0 +1,74 @@
+name: Warframe Rotation Tracker
+
+on:
+  schedule:
+    # Check 5 minutes after every hour. GitHub Actions schedules use UTC.
+    - cron: "5 * * * *"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Which tracker should run?"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - coda
+          - bird3
+          - archon
+      force:
+        description: "Force a Discord post even if this rotation was already posted?"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: warframe-rotation-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tracker
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          INPUT_ONLY: ${{ inputs.only }}
+          INPUT_FORCE: ${{ inputs.force }}
+        shell: bash
+        run: |
+          ONLY="${INPUT_ONLY:-all}"
+          EXTRA=""
+          if [[ "${INPUT_FORCE:-false}" == "true" ]]; then
+            EXTRA="--force"
+          fi
+          python tracker.py --only "$ONLY" $EXTRA
+
+      - name: Save tracker state
+        if: always()
+        shell: bash
+        run: |
+          if git diff --quiet -- data/state.json; then
+            echo "No state changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/state.json
+          git commit -m "chore: update Warframe tracker state"
+          git push
