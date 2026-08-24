@@ -1,202 +1,151 @@
-# Warframe Discord Rotation Tracker
+Pazuul — Warframe Rotation Tracker
 
-A small GitHub Actions + Discord webhook tracker that works alongside Genesis.
+Pazuul is a lightweight Warframe rotation tracker that runs with GitHub Actions and posts updates to Discord through a webhook.
 
-It posts only when a rotation changes:
+It is designed to run alongside Genesis and automatically track several Warframe rotations without requiring you to keep a PC or server online.
 
-- **Eleanor / Technocyte Coda weapons** — Batch A/B every 4 days at 00:00 UTC.
-- **Bird 3 weekly Archon Shard** — Azure / Amber / Crimson every Monday at 00:00 UTC.
-- **Weekly Archon Hunt** — fetched live from WarframeStat.us, including boss, shard color, and all 3 missions.
+Tracked Rotations
 
-No paid server is required. GitHub Actions checks once per hour and `data/state.json` prevents duplicate notifications.
+🦠 Technocyte Coda / Eleanor
 
-## 1. Create the Discord webhook
+Tracks the active Coda weapon batch.
 
-In Discord:
+Alternates between Batch A and Batch B.
 
-1. Open the channel you want the alerts in.
-2. **Edit Channel → Integrations → Webhooks → New Webhook**.
-3. Name it something like `Warframe Rotation Tracker`.
-4. Copy the webhook URL.
+Rotates every 96 hours.
 
-**Keep the webhook URL private.** Anyone with it can post to that channel.
+Posts only when the rotation changes.
 
-## 2. Upload this project to GitHub
+Can also be manually pushed from GitHub Actions.
 
-Create a **private** GitHub repository, for example:
+🐦 Bird 3 Archon Shard
 
-`warframe-rotation-tracker`
+Tracks Bird 3's weekly Archon Shard.
 
-Upload everything in this folder, including the hidden `.github` folder.
+Rotates between:
 
-## 3. Add the webhook as a GitHub secret
+Azure Archon Shard
 
-In the repository:
+Amber Archon Shard
 
-**Settings → Secrets and variables → Actions → New repository secret**
+Crimson Archon Shard
 
-Name:
+Updates on the weekly reset.
 
-`DISCORD_WEBHOOK`
+Posts only when the shard changes.
 
-Value:
+⚔️ Weekly Archon Hunt
 
-Paste your Discord webhook URL.
+Pulls the current Archon Hunt from live Warframe data.
 
-## 4. Test it
+Displays:
 
-Go to:
+Current Archon
 
-**Actions → Warframe Rotation Tracker → Run workflow**
+Archon Shard reward
 
-Choose:
+Mission 1
 
-- `only: all`
-- `force: true`
+Mission 2
 
-Then press **Run workflow**.
+Mission 3
 
-That forces one test message for Coda, Bird 3, and the Archon Hunt.
+Mission nodes
 
-Afterward, leave `force` off. The scheduled job checks hourly and only posts when it sees a new rotation.
+Hunt expiration/reset time
 
-## What the alerts look like
+Ignores expired Archon Hunt data while waiting for the live source to refresh.
 
-### Coda
+✨ Baro Ki'Teer
 
-The Coda embed shows the active batch and every available weapon, plus Discord's live countdown to the next rotation.
+Tracks Baro Ki'Teer.
 
-The tracker follows this cycle:
+When Baro is active, Pazuul can show:
 
-**Batch A**
-- Coda Hema
-- Coda Sporothrix
-- Coda Catabolyst
-- Coda Pox
-- Dual Coda Torxica
-- Coda Mire
-- Coda Motovore
+Relay/location
 
-**Batch B**
-- Coda Bassocyst
-- Coda Bubonico
-- Coda Synapse
-- Coda Tysis
-- Coda Caustacyst
-- Coda Hirudo
-- Coda Pathocyst
+Full inventory
 
-Important: the bot tracks which **weapons** are in Eleanor's current batch. The individual **Valence element and percentage rolls are generated in-game** and are not exposed by the WarframeStat.us Archon/world-state endpoint used by this project, so the embed tells players to check Eleanor for those rolls.
+Credit prices
 
-### Bird 3
+Ducat prices
 
-The Bird 3 embed shows the current normal Archon Shard for **30,000 Cavia Standing** and the next Monday reset.
+Departure time
 
-### Archon Hunt
+Automatic notifications are protected from duplicate posts.
 
-The Archon Hunt is **live**, not calculated from a fixed schedule. The tracker requests:
+Baro can also be manually pushed from GitHub Actions.
 
-`https://api.warframestat.us/pc/archonHunt`
+⚔️ Teshin — Steel Path Honors
 
-It posts:
+Tracks Teshin's weekly Steel Path offering.
 
-- Current Archon boss
-- Corresponding shard color
-- Mission 1 + node
-- Mission 2 + node
-- Mission 3 + node
-- Expiry/reset time
+Displays the current rotating reward.
 
-Boss-to-shard mapping:
+Shows the Steel Essence cost.
 
-- Archon Amar → Crimson Archon Shard
-- Archon Nira → Amber Archon Shard
-- Archon Boreal → Azure Archon Shard
+Can optionally show evergreen Steel Path offerings.
 
-## Optional Discord role ping
+Posts when the weekly reward changes.
 
-If you want a role ping such as `@Warframe Alerts`, get the role ID and edit `config.json`.
+Discord Role Mentions
+
+Role mentions are configured in config.json.
 
 Example:
 
-```json
 "mentions": {
-  "all": "<@&123456789012345678>",
+  "all": "<@&YOUR_ROLE_ID>",
   "coda": "",
   "bird3": "",
-  "archon": ""
+  "archon": "",
+  "baro": "",
+  "teshin": ""
 }
-```
 
-Using `all` pings the role for all three trackers. Or leave `all` blank and put a role mention under only the tracker you want.
+Putting a role mention under "all" will ping that role for every tracker notification.
 
-To get a Discord role ID, enable Developer Mode in Discord, right-click the role, and choose **Copy Role ID**.
+You can also remove the "all" mention and assign different Discord roles to individual trackers.
 
-## Run locally without posting
+Discord role mention format:
 
-Python 3.11+ is enough; there are no third-party dependencies.
+<@&ROLE_ID>
 
-```bash
-python tracker.py --dry-run --force
-```
+Discord Webhook
 
-Run only one tracker:
+Create a Discord webhook in the channel where you want Pazuul to post.
 
-```bash
-python tracker.py --dry-run --force --only archon
-python tracker.py --dry-run --force --only coda
-python tracker.py --dry-run --force --only bird3
-```
+In Discord:
 
-To actually post locally, set the environment variable first:
+Open the channel settings.
 
-macOS/Linux:
+Go to Integrations.
 
-```bash
-export DISCORD_WEBHOOK='YOUR_WEBHOOK_URL'
-python tracker.py --force
-```
+Open Webhooks.
 
-PowerShell:
+Create a new webhook.
 
-```powershell
-$env:DISCORD_WEBHOOK='YOUR_WEBHOOK_URL'
-python tracker.py --force
-```
+Copy the webhook URL.
 
-## How duplicate prevention works
+Do not put the webhook URL directly in the repository.
 
-After a successful post, the tracker writes the rotation key to:
+In GitHub:
 
-`data/state.json`
+Open the repository.
 
-The GitHub workflow commits that file back to the repository. On the next hourly check, the same rotation is skipped.
+Go to Settings.
 
-If Discord rejects a webhook post or the live Archon API fails, the state is not advanced for that notification, so the tracker can retry on the next run.
+Open Secrets and variables → Actions.
 
-## If Digital Extremes forces a Coda rotation
+Create a repository secret named:
 
-DE has manually forced Eleanor's store to rotate before. If they ever do that again and it permanently changes the 4-day phase, update:
+DISCORD_WEBHOOK
 
-```json
-"reference_utc": "YYYY-MM-DDT00:00:00Z"
-```
+Paste the Discord webhook URL as the secret value.
 
-under `coda` in `config.json`, and make the first item in `order` match the batch active on that reference date.
+Repository Layout
 
-## Rotation references used by this project
-
-The current reference points/order were taken from the open-source Warframe Task Checklist cycle data:
-
-- Coda reference: `2025-03-18`, alternating the two weapon groups every 4 days.
-- Bird 3 reference: `2026-01-12`, order Azure → Amber → Crimson weekly.
-
-The weekly Archon Hunt does not rely on that table; it comes directly from WarframeStat.us/WFCD every time the action runs.
-
-## Files
-
-```text
-warframe-rotation-tracker/
+WF-TRACKER/
 ├── .github/
 │   └── workflows/
 │       └── warframe-tracker.yml
@@ -206,10 +155,144 @@ warframe-rotation-tracker/
 ├── tracker.py
 ├── .gitignore
 └── README.md
-```
 
-## Notes
+Automatic Updates
 
-- GitHub scheduled workflows can occasionally start a few minutes late. The job checks hourly, so it will catch the new rotation on the next run if necessary.
-- Keep the repo private if you prefer, but the webhook itself is stored only as a GitHub secret and is never written into the code.
-- This is an unofficial community tool and is not affiliated with Digital Extremes, Discord, Genesis, or WFCD.
+The GitHub Actions workflow checks for changes several times per hour.
+
+Current schedule:
+
+- cron: "7,22,37,52 * * * *"
+
+This checks at approximately:
+
+:07
+:22
+:37
+:52
+
+of every hour.
+
+GitHub Actions schedules use UTC and may occasionally start a few minutes late.
+
+Pazuul uses data/state.json to remember what it has already posted so the same rotation is not repeatedly sent to Discord.
+
+Do not delete data/state.json unless you intentionally want to reset the tracker's saved state.
+
+Manual Push
+
+You can manually push any current tracker status to Discord.
+
+Go to:
+
+GitHub → Actions → Warframe Rotation Tracker → Run workflow
+
+Available trackers:
+
+all
+coda
+bird3
+archon
+baro
+teshin
+
+Choose the tracker you want.
+
+To post it even if that rotation has already been sent, enable:
+
+force = true
+
+The force option only applies to manual workflow runs. Scheduled runs do not force duplicate notifications.
+
+Pazuul Discord Name
+
+The webhook username can be configured in config.json:
+
+"discord_username": "Pazuul"
+
+If the tracker does not override the webhook username, you can also rename the webhook itself to Pazuul from Discord's webhook settings.
+
+Configuration
+
+The main settings are stored in:
+
+config.json
+
+Example structure:
+
+{
+  "platform": "pc",
+  "discord_username": "Pazuul",
+
+  "mentions": {
+    "all": "",
+    "coda": "",
+    "bird3": "",
+    "archon": "",
+    "baro": "",
+    "teshin": ""
+  },
+
+  "coda": {
+    "enabled": true
+  },
+
+  "bird3": {
+    "enabled": true
+  },
+
+  "archon_hunt": {
+    "enabled": true
+  },
+
+  "baro": {
+    "enabled": true
+  },
+
+  "teshin": {
+    "enabled": true,
+    "show_evergreens": true
+  }
+}
+
+GitHub Actions
+
+The workflow is stored at:
+
+.github/workflows/warframe-tracker.yml
+
+It handles:
+
+Automatic scheduled checks
+
+Manual runs
+
+Optional manual force-posting
+
+Saving tracker state
+
+Running the Python tracker
+
+The workflow uses:
+
+actions/checkout@v7
+actions/setup-python@v7
+Python 3.12
+
+Important Notes
+
+Keep DISCORD_WEBHOOK stored as a GitHub secret.
+
+Never post your Discord webhook URL publicly.
+
+Keep data/state.json so duplicate protection continues working.
+
+Live Warframe data can occasionally take time to update immediately after a reset.
+
+If the Archon Hunt API still reports an expired hunt, Pazuul waits for fresh data instead of posting the expired hunt.
+
+Manual force = true reposts the current information but does not make an external Warframe data source refresh sooner.
+
+Disclaimer
+
+Pazuul is an unofficial community project and is not affiliated with Digital Extremes, Warframe, Discord, Genesis, GitHub, or WFCD.
