@@ -10,7 +10,8 @@
     "baro": "",
     "darvo": "",
     "teshin": ""
-  }
+  },
+  
   "coda": {
     "enabled": true,
     "reference_utc": "2025-03-18T00:00:00Z",
