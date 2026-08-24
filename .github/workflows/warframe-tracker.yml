@@ -18,6 +18,12 @@ workflow_dispatch:
         - bird3
         - archon
 
+    force:
+      description: "Force a Discord post even if this rotation was already posted?"
+      required: true
+      default: false
+      type: boolean
+
 permissions:
   contents: write
 
