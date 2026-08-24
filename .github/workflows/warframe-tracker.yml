@@ -2,7 +2,7 @@ name: Pazuul
 
 on:
   schedule:
-    # Automatic check every 15 minutes
+    # Automatic check every 15 minutes. GitHub Actions schedules use UTC.
     - cron: "7,22,37,52 * * * *"
 
   workflow_dispatch:
@@ -17,6 +17,9 @@ on:
           - coda
           - bird3
           - archon
+          - baro
+          - darvo
+          - teshin
 
       force:
         description: "Post it even if it has already been posted?"
@@ -56,7 +59,8 @@ jobs:
         run: |
           ONLY="${INPUT_ONLY:-all}"
 
-          # Scheduled runs should NEVER force-post.
+          # Scheduled runs NEVER force-post. Force is allowed only when you
+          # manually click Run workflow in GitHub Actions.
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$INPUT_FORCE" == "true" ]]; then
             python tracker.py --only "$ONLY" --force
           else
