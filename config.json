@@ -1,0 +1,51 @@
+{
+  "platform": "pc",
+  "discord_username": "Warframe Rotation Tracker",
+  "mentions": {
+    "all": "",
+    "coda": "",
+    "bird3": "",
+    "archon": ""
+  },
+  "coda": {
+    "enabled": true,
+    "reference_utc": "2025-03-18T00:00:00Z",
+    "rotation_hours": 96,
+    "order": [
+      "A",
+      "B"
+    ],
+    "batches": {
+      "A": [
+        "Coda Hema",
+        "Coda Sporothrix",
+        "Coda Catabolyst",
+        "Coda Pox",
+        "Dual Coda Torxica",
+        "Coda Mire",
+        "Coda Motovore"
+      ],
+      "B": [
+        "Coda Bassocyst",
+        "Coda Bubonico",
+        "Coda Synapse",
+        "Coda Tysis",
+        "Coda Caustacyst",
+        "Coda Hirudo",
+        "Coda Pathocyst"
+      ]
+    }
+  },
+  "bird3": {
+    "enabled": true,
+    "reference_utc": "2026-01-12T00:00:00Z",
+    "order": [
+      "Azure Archon Shard",
+      "Amber Archon Shard",
+      "Crimson Archon Shard"
+    ]
+  },
+  "archon_hunt": {
+    "enabled": true
+  }
+}
