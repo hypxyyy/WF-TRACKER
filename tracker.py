@@ -8,6 +8,7 @@ Tracks:
 - Baro Ki'Teer (live arrival + full inventory)
 - Darvo's Daily Deal (live item, discount, price, stock)
 - Teshin Steel Path Honors (live weekly reward + evergreen offerings)
+- Steel Path Circuit Incarnon Genesis (9-week rotation)
 
 Designed for GitHub Actions + a Discord webhook.
 Uses only the Python standard library.
@@ -31,7 +32,7 @@ ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
 STATE_PATH = ROOT / "data" / "state.json"
 
-USER_AGENT = "pazuul-warframe-tracker/2.0 (+https://github.com/)"
+USER_AGENT = "pazuul-warframe-tracker/2.1 (+https://github.com/)"
 
 # Discord embed colors (decimal RGB values)
 COLORS = {
@@ -41,6 +42,7 @@ COLORS = {
     "baro": 0xC9A227,
     "darvo": 0x2E8B57,
     "teshin": 0x6B7280,
+    "incarnon": 0x4F8FBF,
 }
 
 ARCHON_SHARDS = {
@@ -61,7 +63,7 @@ SHARD_EMOJI = {
     "Azure Archon Shard": "🔵",
 }
 
-TRACKERS = ("coda", "bird3", "archon", "baro", "darvo", "teshin")
+TRACKERS = ("coda", "bird3", "archon", "baro", "darvo", "teshin", "incarnon")
 
 
 class TrackerNotReady(RuntimeError):
@@ -243,6 +245,48 @@ def get_bird3_rotation(config: dict[str, Any], now: datetime) -> Rotation:
         starts=starts,
         expires=expires,
         payload={"index": index, "shard": shard},
+    )
+
+
+def get_incarnon_rotation(config: dict[str, Any], now: datetime) -> Rotation:
+    """Calculate the current Steel Path Circuit Incarnon Genesis week."""
+    incarnon = config["incarnon"]
+    ref = parse_iso(incarnon["reference_utc"])
+    reference_week = int(incarnon.get("reference_week", 9))
+    weeks = incarnon["weeks"]
+
+    week_numbers = sorted(int(key) for key in weeks.keys())
+    if week_numbers != list(range(1, len(week_numbers) + 1)):
+        raise ValueError("Incarnon weeks in config.json must be numbered consecutively starting at 1.")
+
+    duration = timedelta(days=7)
+    if now < ref:
+        raise ValueError(
+            f"Current time {now.isoformat()} is before Incarnon reference {ref.isoformat()}"
+        )
+
+    elapsed_weeks = int((now - ref).total_seconds() // duration.total_seconds())
+    starts = ref + duration * elapsed_weeks
+    expires = starts + duration
+
+    total_weeks = len(week_numbers)
+    current_week = ((reference_week - 1 + elapsed_weeks) % total_weeks) + 1
+    next_week = (current_week % total_weeks) + 1
+
+    weapons = weeks[str(current_week)]
+    next_weapons = weeks[str(next_week)]
+
+    return Rotation(
+        key=f"incarnon:{starts.isoformat()}:week{current_week}",
+        name="incarnon",
+        starts=starts,
+        expires=expires,
+        payload={
+            "week": current_week,
+            "weapons": weapons,
+            "next_week": next_week,
+            "next_weapons": next_weapons,
+        },
     )
 
 
@@ -637,6 +681,43 @@ def teshin_embed(rotation: Rotation, config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def incarnon_embed(rotation: Rotation) -> dict[str, Any]:
+    week = rotation.payload["week"]
+    weapons = rotation.payload["weapons"]
+    next_week = rotation.payload["next_week"]
+    next_weapons = rotation.payload["next_weapons"]
+
+    current_lines = "\n".join(f"• **{weapon} Incarnon Genesis**" for weapon in weapons)
+    next_lines = ", ".join(next_weapons)
+
+    return {
+        "title": f"🌀 Steel Path Circuit — Incarnon Genesis Week {week}",
+        "description": current_lines,
+        "color": COLORS["incarnon"],
+        "fields": [
+            {
+                "name": "Reward Path",
+                "value": "Choose **2 of the 5** Incarnon Genesis adapters for this week's Steel Path Circuit reward path.",
+                "inline": False,
+            },
+            {
+                "name": "Next rotation",
+                "value": f"{discord_time(rotation.expires)}\n{discord_time(rotation.expires, 'F')}",
+                "inline": False,
+            },
+            {
+                "name": f"Next week — Week {next_week}",
+                "value": next_lines,
+                "inline": False,
+            },
+        ],
+        "footer": {
+            "text": "Steel Path Circuit Incarnon Genesis • 9-week rotation • weekly reset at 00:00 UTC"
+        },
+        "timestamp": rotation.starts.isoformat().replace("+00:00", "Z"),
+    }
+
+
 # ------------------------------ Discord helpers -----------------------------
 
 
@@ -695,6 +776,9 @@ def build_tracker(
     if tracker == "teshin":
         rotation = get_teshin(config, now)
         return rotation, teshin_embed(rotation, config)
+    if tracker == "incarnon":
+        rotation = get_incarnon_rotation(config, now)
+        return rotation, incarnon_embed(rotation)
     raise ValueError(f"Unknown tracker: {tracker}")
 
 
