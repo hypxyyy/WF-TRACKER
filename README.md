@@ -1,147 +1,116 @@
 Pazuul — Warframe Rotation Tracker
 
-Pazuul is a lightweight Warframe rotation tracker that runs with GitHub Actions and posts updates to Discord through a webhook.
+Pazuul is a lightweight Warframe tracker that runs through GitHub Actions and sends updates to Discord with a webhook. Your computer does not need to stay on.
 
-It is designed to run alongside Genesis and automatically track several Warframe rotations without requiring you to keep a PC or server online.
-
-Tracked Rotations
+What Pazuul Tracks
 
 🦠 Technocyte Coda / Eleanor
 
 Tracks the active Coda weapon batch.
 
-Alternates between Batch A and Batch B.
-
-Rotates every 96 hours.
+Alternates between Batch A and Batch B every 96 hours.
 
 Posts only when the rotation changes.
 
-Can also be manually pushed from GitHub Actions.
+Supports manual force-posts.
 
 🐦 Bird 3 Archon Shard
 
 Tracks Bird 3's weekly Archon Shard.
 
-Rotates between:
+Rotates between Azure, Amber, and Crimson.
 
-Azure Archon Shard
-
-Amber Archon Shard
-
-Crimson Archon Shard
-
-Updates on the weekly reset.
-
-Posts only when the shard changes.
+Updates at the weekly reset.
 
 ⚔️ Weekly Archon Hunt
 
-Pulls the current Archon Hunt from live Warframe data.
+Uses live Warframe data.
 
-Displays:
+Shows the current Archon, shard reward, all three missions, nodes, and reset time.
 
-Current Archon
-
-Archon Shard reward
-
-Mission 1
-
-Mission 2
-
-Mission 3
-
-Mission nodes
-
-Hunt expiration/reset time
-
-Ignores expired Archon Hunt data while waiting for the live source to refresh.
+Ignores expired API data while waiting for a fresh weekly hunt.
 
 ✨ Baro Ki'Teer
 
-Tracks Baro Ki'Teer.
+Uses live Warframe data.
 
-When Baro is active, Pazuul can show:
+Shows his relay/location and full inventory when active.
 
-Relay/location
+Shows Credit and Ducat prices.
 
-Full inventory
+Shows his departure time.
 
-Credit prices
+A manual force-post can show his upcoming arrival when he is away.
 
-Ducat prices
+💰 Darvo's Daily Deal
 
-Departure time
+Uses live Warframe data.
 
-Automatic notifications are protected from duplicate posts.
+Shows the item, discount, original price, sale price, stock remaining, and reset time.
 
-Baro can also be manually pushed from GitHub Actions.
+Posts when the current deal changes.
 
 ⚔️ Teshin — Steel Path Honors
 
-Tracks Teshin's weekly Steel Path offering.
+Uses live Warframe data.
 
-Displays the current rotating reward.
+Shows the current weekly Steel Path reward and Steel Essence cost.
 
-Shows the Steel Essence cost.
+Can show the next reward and evergreen offerings.
 
-Can optionally show evergreen Steel Path offerings.
+🌀 Steel Path Circuit — Incarnon Genesis
 
-Posts when the weekly reward changes.
+Tracks the current 9-week Incarnon Genesis rotation.
 
-Discord Role Mentions
+Shows all five adapters available that week.
 
-Role mentions are configured in config.json.
+Shows the next week's rotation.
 
-Example:
+Updates at the weekly reset.
 
-"mentions": {
-  "all": "<@&YOUR_ROLE_ID>",
-  "coda": "",
-  "bird3": "",
-  "archon": "",
-  "baro": "",
-  "teshin": ""
-}
+The schedule is anchored to Week 9 beginning June 22, 2026 at 00:00 UTC.
 
-Putting a role mention under "all" will ping that role for every tracker notification.
+Current Incarnon Rotation Schedule
 
-You can also remove the "all" mention and assign different Discord roles to individual trackers.
+Week
 
-Discord role mention format:
+Incarnon Genesis choices
 
-<@&ROLE_ID>
+1
 
-Discord Webhook
+Braton, Lato, Skana, Paris, Kunai
 
-Create a Discord webhook in the channel where you want Pazuul to post.
+2
 
-In Discord:
+Boar, Gammacor, Angstrum, Gorgon, Anku
 
-Open the channel settings.
+3
 
-Go to Integrations.
+Bo, Latron, Furis, Furax, Strun
 
-Open Webhooks.
+4
 
-Create a new webhook.
+Lex, Magistar, Boltor, Bronco, Ceramic Dagger
 
-Copy the webhook URL.
+5
 
-Do not put the webhook URL directly in the repository.
+Torid, Dual Toxocyst, Dual Ichor, Miter, Atomos
 
-In GitHub:
+6
 
-Open the repository.
+Ack & Brunt, Soma, Vasto, Nami Solo, Burston
 
-Go to Settings.
+7
 
-Open Secrets and variables → Actions.
+Zylok, Sibear, Dread, Despair, Hate
 
-Create a repository secret named:
+8
 
-DISCORD_WEBHOOK
+Dera, Sybaris, Cestra, Sicarus, Okina
 
-Paste the Discord webhook URL as the secret value.
+9
+
+Vectis, Stug, Ballistica, Destreza, Obex
 
 Repository Layout
 
@@ -156,122 +125,92 @@ WF-TRACKER/
 ├── .gitignore
 └── README.md
 
-Automatic Updates
+Discord Webhook
 
-The GitHub Actions workflow checks for changes several times per hour.
+Store your webhook in:
 
-Current schedule:
+GitHub → Settings → Secrets and variables → Actions
+
+The repository secret must be named exactly:
+
+DISCORD_WEBHOOK
+
+Do not put your webhook URL directly in the code.
+
+Discord Role Pings
+
+Role pings are controlled in config.json.
+
+"mentions": {
+  "all": "<@&YOUR_ROLE_ID>",
+  "coda": "",
+  "bird3": "",
+  "archon": "",
+  "baro": "",
+  "darvo": "",
+  "teshin": "",
+  "incarnon": ""
+}
+
+Putting a role under "all" pings that role for every Pazuul update.
+
+Discord role mention format:
+
+<@&ROLE_ID>
+
+Automatic Checks
+
+Pazuul checks several times per hour:
 
 - cron: "7,22,37,52 * * * *"
 
-This checks at approximately:
+Scheduled runs never force-post duplicate information.
 
-:07
-:22
-:37
-:52
+data/state.json remembers what Pazuul has already posted.
 
-of every hour.
-
-GitHub Actions schedules use UTC and may occasionally start a few minutes late.
-
-Pazuul uses data/state.json to remember what it has already posted so the same rotation is not repeatedly sent to Discord.
-
-Do not delete data/state.json unless you intentionally want to reset the tracker's saved state.
+Leave data/state.json alone when updating Pazuul.
 
 Manual Push
-
-You can manually push any current tracker status to Discord.
 
 Go to:
 
 GitHub → Actions → Warframe Rotation Tracker → Run workflow
 
-Available trackers:
+Available choices:
 
 all
 coda
 bird3
 archon
 baro
+darvo
 teshin
+incarnon
 
-Choose the tracker you want.
-
-To post it even if that rotation has already been sent, enable:
+Set:
 
 force = true
 
-The force option only applies to manual workflow runs. Scheduled runs do not force duplicate notifications.
+to manually repost the selected current tracker even if it was already posted.
 
-Pazuul Discord Name
+The force option is only honored on manual workflow runs.
 
-The webhook username can be configured in config.json:
+Updating These Files
 
-"discord_username": "Pazuul"
+When installing this Incarnon upgrade, replace:
 
-If the tracker does not override the webhook username, you can also rename the webhook itself to Pazuul from Discord's webhook settings.
-
-Configuration
-
-The main settings are stored in:
-
+tracker.py
 config.json
-
-Example structure:
-
-{
-  "platform": "pc",
-  "discord_username": "Pazuul",
-
-  "mentions": {
-    "all": "",
-    "coda": "",
-    "bird3": "",
-    "archon": "",
-    "baro": "",
-    "teshin": ""
-  },
-
-  "coda": {
-    "enabled": true
-  },
-
-  "bird3": {
-    "enabled": true
-  },
-
-  "archon_hunt": {
-    "enabled": true
-  },
-
-  "baro": {
-    "enabled": true
-  },
-
-  "teshin": {
-    "enabled": true,
-    "show_evergreens": true
-  }
-}
-
-GitHub Actions
-
-The workflow is stored at:
-
 .github/workflows/warframe-tracker.yml
+README.md
 
-It handles:
+Do not replace:
 
-Automatic scheduled checks
+data/state.json
 
-Manual runs
+Keeping state.json preserves duplicate protection for your existing trackers.
 
-Optional manual force-posting
-
-Saving tracker state
-
-Running the Python tracker
+Runtime
 
 The workflow uses:
 
@@ -279,20 +218,12 @@ actions/checkout@v7
 actions/setup-python@v7
 Python 3.12
 
-Important Notes
+Notes
 
-Keep DISCORD_WEBHOOK stored as a GitHub secret.
+Pazuul's Discord webhook username is set to Pazuul in config.json.
 
-Never post your Discord webhook URL publicly.
+Live vendor/world-state data can occasionally update a little after the actual in-game reset.
 
-Keep data/state.json so duplicate protection continues working.
+Manual force-posting does not force an upstream Warframe API to refresh.
 
-Live Warframe data can occasionally take time to update immediately after a reset.
-
-If the Archon Hunt API still reports an expired hunt, Pazuul waits for fresh data instead of posting the expired hunt.
-
-Manual force = true reposts the current information but does not make an external Warframe data source refresh sooner.
-
-Disclaimer
-
-Pazuul is an unofficial community project and is not affiliated with Digital Extremes, Warframe, Discord, Genesis, GitHub, or WFCD.
+Pazuul is an unofficial community project and is not affiliated with Digital Extremes, Warframe, Discord, GitHub, Genesis, or WFCD.
