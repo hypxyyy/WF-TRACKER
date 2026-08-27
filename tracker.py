@@ -9,6 +9,7 @@ Tracks:
 - Darvo's Daily Deal (live item, discount, price, stock)
 - Teshin Steel Path Honors (live weekly reward + evergreen offerings)
 - Steel Path Circuit Incarnon Genesis (9-week rotation)
+- Nightwave weekly + elite weekly Acts (live WarframeStat.us / WFCD)
 
 Designed for GitHub Actions + a Discord webhook.
 Uses only the Python standard library.
@@ -32,7 +33,7 @@ ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
 STATE_PATH = ROOT / "data" / "state.json"
 
-USER_AGENT = "pazuul-warframe-tracker/2.1 (+https://github.com/)"
+USER_AGENT = "pazuul-warframe-tracker/2.2 (+https://github.com/)"
 
 # Discord embed colors (decimal RGB values)
 COLORS = {
@@ -43,6 +44,7 @@ COLORS = {
     "darvo": 0x2E8B57,
     "teshin": 0x6B7280,
     "incarnon": 0x4F8FBF,
+    "nightwave": 0x5D5FEF,
 }
 
 ARCHON_SHARDS = {
@@ -63,7 +65,7 @@ SHARD_EMOJI = {
     "Azure Archon Shard": "🔵",
 }
 
-TRACKERS = ("coda", "bird3", "archon", "baro", "darvo", "teshin", "incarnon")
+TRACKERS = ("coda", "bird3", "archon", "baro", "darvo", "teshin", "incarnon", "nightwave")
 
 
 class TrackerNotReady(RuntimeError):
@@ -440,6 +442,119 @@ def get_teshin(config: dict[str, Any], now: datetime) -> Rotation:
     )
 
 
+def get_nightwave(config: dict[str, Any], now: datetime) -> Rotation:
+    """Fetch the current Nightwave weekly/elite weekly Acts from live world-state data."""
+    platform = config.get("platform", "pc")
+    url = f"https://api.warframestat.us/{platform}/nightwave?language=en"
+    data = get_json(url)
+
+    season_activation = parse_iso(data["activation"])
+    season_expiry = parse_iso(data["expiry"])
+    ensure_current(season_activation, season_expiry, now, "Nightwave")
+
+    challenges = data.get("activeChallenges", []) or []
+    parsed: list[tuple[dict[str, Any], datetime, datetime]] = []
+
+    for challenge in challenges:
+        try:
+            activation = parse_iso(challenge["activation"])
+            expiry = parse_iso(challenge["expiry"])
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if activation <= now < expiry:
+            parsed.append((challenge, activation, expiry))
+
+    if not parsed:
+        raise TrackerNotReady("Nightwave API returned no currently active Acts; retrying next check.")
+
+    nw_config = config.get("nightwave", {})
+    show_weekly = bool(nw_config.get("show_weekly", True))
+    show_elite = bool(nw_config.get("show_elite_weekly", True))
+    show_daily = bool(nw_config.get("show_daily", False))
+
+    # For the weekly notification, use the newest activation timestamp among
+    # non-daily Acts. This avoids pulling older recovered Acts into the current
+    # weekly set if the upstream API ever exposes them at the same time.
+    nondaily = [entry for entry in parsed if not bool(entry[0].get("isDaily"))]
+    if nondaily:
+        weekly_start = max(entry[1] for entry in nondaily)
+        current_week = [
+            entry for entry in nondaily
+            if abs((entry[1] - weekly_start).total_seconds()) < 1
+        ]
+    else:
+        current_week = []
+
+    weekly_acts: list[dict[str, Any]] = []
+    elite_acts: list[dict[str, Any]] = []
+    daily_acts: list[dict[str, Any]] = []
+
+    for challenge, activation, expiry in current_week:
+        act = {
+            "id": challenge.get("id"),
+            "title": challenge.get("title", "Unknown Act"),
+            "description": challenge.get("desc", ""),
+            "reputation": challenge.get("reputation", 0),
+            "activation": activation.isoformat(),
+            "expiry": expiry.isoformat(),
+        }
+        if bool(challenge.get("isElite")):
+            if show_elite:
+                elite_acts.append(act)
+        elif show_weekly:
+            weekly_acts.append(act)
+
+    if show_daily:
+        for challenge, activation, expiry in parsed:
+            if not bool(challenge.get("isDaily")):
+                continue
+            daily_acts.append(
+                {
+                    "id": challenge.get("id"),
+                    "title": challenge.get("title", "Unknown Act"),
+                    "description": challenge.get("desc", ""),
+                    "reputation": challenge.get("reputation", 0),
+                    "activation": activation.isoformat(),
+                    "expiry": expiry.isoformat(),
+                }
+            )
+
+    if not weekly_acts and not elite_acts and not daily_acts:
+        raise TrackerNotReady("No Nightwave Acts matched the enabled display settings.")
+
+    all_selected = weekly_acts + elite_acts + daily_acts
+    expiries = [parse_iso(act["expiry"]) for act in all_selected]
+    activations = [parse_iso(act["activation"]) for act in all_selected]
+    starts = min(activations)
+    expires = min(expiries)
+
+    signature_source = [
+        {
+            "id": act.get("id"),
+            "title": act["title"],
+            "reputation": act["reputation"],
+            "expiry": act["expiry"],
+        }
+        for act in all_selected
+    ]
+    signature = stable_signature(signature_source)
+
+    return Rotation(
+        key=f"nightwave:{signature}",
+        name="nightwave",
+        starts=starts,
+        expires=expires,
+        payload={
+            "season": data.get("season"),
+            "weekly": weekly_acts,
+            "elite": elite_acts,
+            "daily": daily_acts,
+            "api_url": url,
+        },
+    )
+
+
 # --------------------------------- Embeds -----------------------------------
 
 
@@ -718,6 +833,73 @@ def incarnon_embed(rotation: Rotation) -> dict[str, Any]:
     }
 
 
+def nightwave_embed(rotation: Rotation) -> dict[str, Any]:
+    weekly = rotation.payload.get("weekly", []) or []
+    elite = rotation.payload.get("elite", []) or []
+    daily = rotation.payload.get("daily", []) or []
+
+    fields: list[dict[str, Any]] = []
+
+    if weekly:
+        lines = [
+            f"• **{act['title']}** — {act['description']}\n  ⭐ {fmt_num(act['reputation'])} Standing"
+            for act in weekly
+        ]
+        for i, chunk in enumerate(chunk_lines(lines), start=1):
+            fields.append(
+                {
+                    "name": "Weekly Acts" if i == 1 else f"Weekly Acts continued ({i})",
+                    "value": chunk,
+                    "inline": False,
+                }
+            )
+
+    if elite:
+        lines = [
+            f"• **{act['title']}** — {act['description']}\n  ⭐ {fmt_num(act['reputation'])} Standing"
+            for act in elite
+        ]
+        for i, chunk in enumerate(chunk_lines(lines), start=1):
+            fields.append(
+                {
+                    "name": "Elite Weekly Acts" if i == 1 else f"Elite Weekly Acts continued ({i})",
+                    "value": chunk,
+                    "inline": False,
+                }
+            )
+
+    if daily:
+        lines = [
+            f"• **{act['title']}** — {act['description']}\n  ⭐ {fmt_num(act['reputation'])} Standing"
+            for act in daily
+        ]
+        for i, chunk in enumerate(chunk_lines(lines), start=1):
+            fields.append(
+                {
+                    "name": "Daily Acts" if i == 1 else f"Daily Acts continued ({i})",
+                    "value": chunk,
+                    "inline": False,
+                }
+            )
+
+    fields.append(
+        {
+            "name": "Weekly reset",
+            "value": f"{discord_time(rotation.expires)}\n{discord_time(rotation.expires, 'F')}",
+            "inline": False,
+        }
+    )
+
+    return {
+        "title": "🌙 Nightwave",
+        "description": "The current Nightwave Weekly and Elite Weekly Acts.",
+        "color": COLORS["nightwave"],
+        "fields": fields,
+        "footer": {"text": "Live Nightwave data: WarframeStat.us / WFCD"},
+        "timestamp": rotation.starts.isoformat().replace("+00:00", "Z"),
+    }
+
+
 # ------------------------------ Discord helpers -----------------------------
 
 
@@ -779,6 +961,9 @@ def build_tracker(
     if tracker == "incarnon":
         rotation = get_incarnon_rotation(config, now)
         return rotation, incarnon_embed(rotation)
+    if tracker == "nightwave":
+        rotation = get_nightwave(config, now)
+        return rotation, nightwave_embed(rotation)
     raise ValueError(f"Unknown tracker: {tracker}")
 
 
