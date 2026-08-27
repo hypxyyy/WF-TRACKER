@@ -9,7 +9,8 @@
     "baro": "",
     "darvo": "",
     "teshin": "",
-    "incarnon": ""
+    "incarnon": "",
+    "nightwave": ""
   },
   "coda": {
     "enabled": true,
@@ -131,5 +132,11 @@
         "Obex"
       ]
     }
+  },
+  "nightwave": {
+    "enabled": true,
+    "show_weekly": true,
+    "show_elite_weekly": true,
+    "show_daily": false
   }
 }
