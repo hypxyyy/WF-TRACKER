@@ -21,6 +21,7 @@ on:
           - darvo
           - teshin
           - incarnon
+          - nightwave
 
       force:
         description: "Post it even if it has already been posted?"
