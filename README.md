@@ -1,116 +1,85 @@
 Pazuul — Warframe Rotation Tracker
 
-Pazuul is a lightweight Warframe tracker that runs through GitHub Actions and sends updates to Discord with a webhook. Your computer does not need to stay on.
+Pazuul is a lightweight Warframe tracker that runs through GitHub Actions and posts updates to Discord through a webhook.
 
-What Pazuul Tracks
+Trackers
 
 🦠 Technocyte Coda / Eleanor
 
-Tracks the active Coda weapon batch.
-
-Alternates between Batch A and Batch B every 96 hours.
-
-Posts only when the rotation changes.
-
-Supports manual force-posts.
+Tracks the active Coda weapon batch and posts when the 4-day rotation changes.
 
 🐦 Bird 3 Archon Shard
 
-Tracks Bird 3's weekly Archon Shard.
-
-Rotates between Azure, Amber, and Crimson.
-
-Updates at the weekly reset.
+Tracks Bird 3's weekly Azure, Amber, or Crimson Archon Shard offering.
 
 ⚔️ Weekly Archon Hunt
 
-Uses live Warframe data.
-
-Shows the current Archon, shard reward, all three missions, nodes, and reset time.
-
-Ignores expired API data while waiting for a fresh weekly hunt.
+Uses live Warframe data to show the current Archon, shard reward, three missions, nodes, and reset time.
 
 ✨ Baro Ki'Teer
 
-Uses live Warframe data.
-
-Shows his relay/location and full inventory when active.
-
-Shows Credit and Ducat prices.
-
-Shows his departure time.
-
-A manual force-post can show his upcoming arrival when he is away.
+Uses live Warframe data to show Baro's relay, full active inventory, Credit prices, Ducat prices, and departure time.
 
 💰 Darvo's Daily Deal
 
-Uses live Warframe data.
-
-Shows the item, discount, original price, sale price, stock remaining, and reset time.
-
-Posts when the current deal changes.
+Uses live Warframe data to show Darvo's item, discount, normal/sale Platinum price, stock, and reset time.
 
 ⚔️ Teshin — Steel Path Honors
 
-Uses live Warframe data.
-
-Shows the current weekly Steel Path reward and Steel Essence cost.
-
-Can show the next reward and evergreen offerings.
+Tracks the current Steel Path Honors reward, Steel Essence price, and optional evergreen offerings.
 
 🌀 Steel Path Circuit — Incarnon Genesis
 
-Tracks the current 9-week Incarnon Genesis rotation.
+Tracks the 9-week Incarnon Genesis rotation and displays the five current choices plus next week's set.
 
-Shows all five adapters available that week.
+🌙 Nightwave
 
-Shows the next week's rotation.
+Uses live Warframe data and posts the current Weekly Acts and Elite Weekly Acts.
 
-Updates at the weekly reset.
+The Discord embed title is always:
 
-The schedule is anchored to Week 9 beginning June 22, 2026 at 00:00 UTC.
+🌙 Nightwave
 
-Current Incarnon Rotation Schedule
+By default, daily Acts are disabled so Pazuul does not post a new Nightwave notification every day.
 
-Week
+Nightwave settings in config.json:
 
-Incarnon Genesis choices
+"nightwave": {
+  "enabled": true,
+  "show_weekly": true,
+  "show_elite_weekly": true,
+  "show_daily": false
+}
 
-1
+Discord Role Mentions
 
-Braton, Lato, Skana, Paris, Kunai
+Role mentions are configured in config.json.
 
-2
+"mentions": {
+  "all": "<@&YOUR_ROLE_ID>",
+  "coda": "",
+  "bird3": "",
+  "archon": "",
+  "baro": "",
+  "darvo": "",
+  "teshin": "",
+  "incarnon": "",
+  "nightwave": ""
+}
 
-Boar, Gammacor, Angstrum, Gorgon, Anku
+A role in "all" is used for every tracker unless you assign a tracker-specific mention.
 
-3
+Discord Webhook
 
-Bo, Latron, Furis, Furax, Strun
+Store the webhook URL as a GitHub Actions repository secret named:
 
-4
+DISCORD_WEBHOOK
 
-Lex, Magistar, Boltor, Bronco, Ceramic Dagger
+Path:
 
-5
+GitHub → Settings → Secrets and variables → Actions
 
-Torid, Dual Toxocyst, Dual Ichor, Miter, Atomos
-
-6
-
-Ack & Brunt, Soma, Vasto, Nami Solo, Burston
-
-7
-
-Zylok, Sibear, Dread, Despair, Hate
-
-8
-
-Dera, Sybaris, Cestra, Sicarus, Okina
-
-9
-
-Vectis, Stug, Ballistica, Destreza, Obex
+Never put the webhook URL directly in the repository.
 
 Repository Layout
 
@@ -125,50 +94,17 @@ WF-TRACKER/
 ├── .gitignore
 └── README.md
 
-Discord Webhook
-
-Store your webhook in:
-
-GitHub → Settings → Secrets and variables → Actions
-
-The repository secret must be named exactly:
-
-DISCORD_WEBHOOK
-
-Do not put your webhook URL directly in the code.
-
-Discord Role Pings
-
-Role pings are controlled in config.json.
-
-"mentions": {
-  "all": "<@&YOUR_ROLE_ID>",
-  "coda": "",
-  "bird3": "",
-  "archon": "",
-  "baro": "",
-  "darvo": "",
-  "teshin": "",
-  "incarnon": ""
-}
-
-Putting a role under "all" pings that role for every Pazuul update.
-
-Discord role mention format:
-
-<@&ROLE_ID>
-
 Automatic Checks
 
-Pazuul checks several times per hour:
+The workflow checks several times per hour:
 
 - cron: "7,22,37,52 * * * *"
 
-Scheduled runs never force-post duplicate information.
+Pazuul only posts when it detects a new rotation or new live data.
 
-data/state.json remembers what Pazuul has already posted.
+data/state.json stores what has already been posted.
 
-Leave data/state.json alone when updating Pazuul.
+Do not replace or delete data/state.json when installing an update.
 
 Manual Push
 
@@ -176,7 +112,7 @@ Go to:
 
 GitHub → Actions → Warframe Rotation Tracker → Run workflow
 
-Available choices:
+Available trackers:
 
 all
 coda
@@ -186,33 +122,29 @@ baro
 darvo
 teshin
 incarnon
+nightwave
 
-Set:
+For a manual Nightwave post choose:
 
-force = true
+only: nightwave
+force: true
 
-to manually repost the selected current tracker even if it was already posted.
+Scheduled runs never force-post. force = true only applies to manual GitHub Actions runs.
 
-The force option is only honored on manual workflow runs.
+Installing This Upgrade
 
-Updating These Files
-
-When installing this Incarnon upgrade, replace:
+Replace these files:
 
 tracker.py
 config.json
 .github/workflows/warframe-tracker.yml
 README.md
 
-Do not replace:
+Leave this file alone:
 
 data/state.json
 
-Keeping state.json preserves duplicate protection for your existing trackers.
-
 Runtime
-
-The workflow uses:
 
 actions/checkout@v7
 actions/setup-python@v7
@@ -220,10 +152,14 @@ Python 3.12
 
 Notes
 
-Pazuul's Discord webhook username is set to Pazuul in config.json.
+Discord webhook username: Pazuul
 
-Live vendor/world-state data can occasionally update a little after the actual in-game reset.
+The Nightwave tracker title is fixed to 🌙 Nightwave.
 
-Manual force-posting does not force an upstream Warframe API to refresh.
+Nightwave Weekly and Elite Weekly Acts come from live Warframe world-state data.
+
+Daily Acts are disabled by default to avoid notification spam.
+
+Live Warframe APIs can take a little time to refresh immediately after resets.
 
 Pazuul is an unofficial community project and is not affiliated with Digital Extremes, Warframe, Discord, GitHub, Genesis, or WFCD.
