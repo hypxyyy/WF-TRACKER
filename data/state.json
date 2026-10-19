@@ -1,11 +1,11 @@
 {
-  "archon": "archon:6acc1f7ec2a1b1c9d449c5d1",
+  "archon": "archon:6ad559fea1b55e551427d302",
   "baro": "baro:5d1e07a0a38e4a4fdd7cefca:inactive:4f53cda18c2baa0c",
-  "bird3": "bird3:2026-10-12T00:00:00+00:00",
-  "coda": "coda:2026-10-15T00:00:00+00:00",
+  "bird3": "bird3:2026-10-19T00:00:00+00:00",
+  "coda": "coda:2026-10-19T00:00:00+00:00",
   "darvo": "darvo:AkimboShotGun1792371600000",
-  "incarnon": "incarnon:2026-10-12T00:00:00+00:00:week7",
-  "nightwave": "nightwave:1450a7294f8cb021",
-  "teshin": "teshin:2026-10-12T00:00:00+00:00:Zaw Riven Mod:75",
-  "updated_at": "2026-10-17T23:20:04.196120Z"
+  "incarnon": "incarnon:2026-10-19T00:00:00+00:00:week8",
+  "nightwave": "nightwave:1c5ee3de122dc34e",
+  "teshin": "teshin:2026-10-19T00:00:00+00:00:30,000 Endo:150",
+  "updated_at": "2026-10-19T01:47:14.852742Z"
 }
