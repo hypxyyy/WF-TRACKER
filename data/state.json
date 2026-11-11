@@ -1,11 +1,11 @@
 {
-  "archon": "archon:6ad559fea1b55e551427d302",
+  "archon": "archon:6af1097e05ec18308537fea6",
   "baro": "baro:5d1e07a0a38e4a4fdd7cefca:inactive:4f53cda18c2baa0c",
-  "bird3": "bird3:2026-10-19T00:00:00+00:00",
-  "coda": "coda:2026-10-23T00:00:00+00:00",
-  "darvo": "darvo:AttackLensGreater1792746000000",
-  "incarnon": "incarnon:2026-10-19T00:00:00+00:00:week8",
-  "nightwave": "nightwave:1c5ee3de122dc34e",
-  "teshin": "teshin:2026-10-19T00:00:00+00:00:30,000 Endo:150",
-  "updated_at": "2026-10-23T00:51:54.714447Z"
+  "bird3": "bird3:2026-11-09T00:00:00+00:00",
+  "coda": "coda:2026-11-08T00:00:00+00:00",
+  "darvo": "darvo:Fist1794430800000",
+  "incarnon": "incarnon:2026-11-09T00:00:00+00:00:week2",
+  "nightwave": "nightwave:ee4f4ca604b10032",
+  "teshin": "teshin:2026-11-09T00:00:00+00:00:Umbra Forma Blueprint:150",
+  "updated_at": "2026-11-11T02:32:24.806543Z"
 }
